@@ -13,12 +13,14 @@ var (
 	mu     sync.Mutex
 )
 
+// Gets all tasks
 func GetAllTasks() []models.Task {
 	mu.Lock()
 	defer mu.Unlock()
 	return tasks
 }
 
+// Gets a task by ID
 func GetTaskByID(id int) (*models.Task, error) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -30,6 +32,7 @@ func GetTaskByID(id int) (*models.Task, error) {
 	return nil, errors.New("task not found")
 }
 
+// Creates a new task
 func CreateTask(task *models.Task) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -39,6 +42,7 @@ func CreateTask(task *models.Task) {
 	fmt.Printf("Task created: %v\n", task)
 }
 
+// updates a task by ID
 func UpdateTask(id int, updatedTask *models.Task) error {
 	mu.Lock()
 	defer mu.Unlock()
@@ -53,6 +57,7 @@ func UpdateTask(id int, updatedTask *models.Task) error {
 	return errors.New("task not found")
 }
 
+// Deletes a task by ID
 func DeleteTask(id int) error {
 	mu.Lock()
 	defer mu.Unlock()
