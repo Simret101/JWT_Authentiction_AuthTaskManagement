@@ -2,6 +2,7 @@ package config
 
 import "time"
 
+// defines the config variables
 var (
 	SecretKey       = "my_secret_key"
 	TokenExpiration = 1 * time.Hour
