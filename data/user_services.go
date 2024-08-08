@@ -3,22 +3,22 @@ package data
 import (
 	"errors"
 	"fmt"
-	"time"
-
+	"task/config"
 	"task/models"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var users = []models.User{}
-var jwtKey = []byte("my_secret_key")
 
 type Claims struct {
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
 
+// adds a new user to the database
 func CreateUser(user *models.User) error {
 	for _, u := range users {
 		if u.Username == user.Username {
@@ -35,6 +35,7 @@ func CreateUser(user *models.User) error {
 	return nil
 }
 
+// verifies user credentials and returns a JWT token
 func AuthenticateUser(username, password string) (string, error) {
 	for _, user := range users {
 		if user.Username == username {
@@ -47,10 +48,11 @@ func AuthenticateUser(username, password string) (string, error) {
 	return "", errors.New("invalid credentials")
 }
 
+// checks the validity of the JWT token
 func ValidateToken(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
+		return []byte(config.SecretKey), nil
 	})
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
@@ -64,15 +66,15 @@ func ValidateToken(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
+// Generatesa JWT
 func generateJWT(username string) (string, error) {
-	expirationTime := time.Now().Add(1 * time.Hour)
+	expirationTime := time.Now().Add(config.TokenExpiration)
 	claims := &Claims{
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtKey)
+	return token.SignedString([]byte(config.SecretKey))
 }
