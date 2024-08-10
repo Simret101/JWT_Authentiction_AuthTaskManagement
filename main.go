@@ -1,10 +1,13 @@
 package main
 
 import (
+	"task/config"
 	"task/router"
 )
 
 func main() {
+
 	r := router.SetupRouter()
-	r.Run(":8080")
+
+	r.Run(config.ServerPort)
 }
