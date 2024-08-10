@@ -13,14 +13,24 @@ var (
 	mu     sync.Mutex
 )
 
-// Gets all tasks
 func GetAllTasks() []models.Task {
 	mu.Lock()
 	defer mu.Unlock()
 	return tasks
 }
 
-// Gets a task by ID
+func GetTasksByUserID(userID int) []models.Task {
+	mu.Lock()
+	defer mu.Unlock()
+	var userTasks []models.Task
+	for _, task := range tasks {
+		if task.UserID == userID {
+			userTasks = append(userTasks, task)
+		}
+	}
+	return userTasks
+}
+
 func GetTaskByID(id int) (*models.Task, error) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -32,7 +42,6 @@ func GetTaskByID(id int) (*models.Task, error) {
 	return nil, errors.New("task not found")
 }
 
-// Creates a new task
 func CreateTask(task *models.Task) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -42,14 +51,13 @@ func CreateTask(task *models.Task) {
 	fmt.Printf("Task created: %v\n", task)
 }
 
-// updates a task by ID
 func UpdateTask(id int, updatedTask *models.Task) error {
 	mu.Lock()
 	defer mu.Unlock()
 	for i, task := range tasks {
 		if task.ID == id {
+			updatedTask.ID = id
 			tasks[i] = *updatedTask
-			tasks[i].ID = id
 			fmt.Printf("Task updated: %v\n", updatedTask)
 			return nil
 		}
@@ -57,7 +65,6 @@ func UpdateTask(id int, updatedTask *models.Task) error {
 	return errors.New("task not found")
 }
 
-// Deletes a task by ID
 func DeleteTask(id int) error {
 	mu.Lock()
 	defer mu.Unlock()
@@ -70,3 +77,4 @@ func DeleteTask(id int) error {
 	}
 	return errors.New("task not found")
 }
+
