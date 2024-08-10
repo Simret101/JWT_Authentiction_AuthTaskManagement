@@ -10,15 +10,15 @@ task-manager/
 ├── config/
 │   └── config.go
 ├── controllers/
-│   ├── userController.go
-│   ├── taskController.go
+│   ├── user_controller.go
+│   ├── task_controller.go
 ├── data/
-│   ├── userData.go
-│   ├── taskData.go
+│   ├── user_services.go
+│   ├── task_services.go
 │  
 ├── middleware/
-│   ├── authMiddleware.go
-│   └── adminMiddleware.go
+│   ├── auth_middleware.go
+│   └── admin_middleware.go
 ├── models/
 │   ├── task.go
 │   └── user.go
