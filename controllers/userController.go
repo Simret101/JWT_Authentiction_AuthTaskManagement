@@ -8,21 +8,34 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// creates a new user
 func Register(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var creds models.Credentials
+	if err := c.ShouldBindJSON(&creds); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
-	if err := data.CreateUser(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+
+	existingUser, _ := data.GetUserByUsername(creds.Username)
+	if existingUser != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Username already taken"})
 		return
 	}
+
+	role := "user"
+	if creds.Role != "" {
+		role = creds.Role
+	}
+
+	user := models.User{
+		ID:       data.GenerateNewUserID(),
+		Username: creds.Username,
+		Password: creds.Password,
+		Role:     role,
+	}
+	data.CreateUser(&user)
 	c.JSON(http.StatusCreated, user)
 }
 
-// authenticates a user and returns a JWT token
 func Login(c *gin.Context) {
 	var credentials models.Credentials
 	if err := c.ShouldBindJSON(&credentials); err != nil {
@@ -34,5 +47,11 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"token": token})
+
+	user, _ := data.GetUserByUsername(credentials.Username)
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+		"role":  user.Role,
+	})
 }
