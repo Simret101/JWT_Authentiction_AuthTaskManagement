@@ -7,20 +7,34 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
+	
 	r.POST("/register", controllers.Register)
 	r.POST("/login", controllers.Login)
 
-	authorized := r.Group("/")
-	authorized.Use(middleware.Auth())
+
+	auth := r.Group("/")
+	auth.Use(middleware.AuthMiddleware())
 	{
-		authorized.GET("/tasks", controllers.GetAllTasks)
-		authorized.GET("/tasks/:id", controllers.GetTaskByID)
-		authorized.POST("/tasks", controllers.CreateTask)
-		authorized.PUT("/tasks/:id", controllers.UpdateTask)
-		authorized.DELETE("/tasks/:id", controllers.DeleteTask)
+		auth.GET("/tasks", controllers.GetAllTasks)
+		auth.GET("/tasks/:id", controllers.GetTaskByID)
+		auth.POST("/tasks", controllers.CreateTask)
+		auth.PUT("/tasks/:id", controllers.UpdateTask)
+		auth.DELETE("/tasks/:id", controllers.DeleteTask)
+	}
+
+	
+	admin := r.Group("/admin")
+	admin.Use(middleware.AuthMiddleware(), middleware.AdminMiddleware())
+	{
+		admin.GET("/tasks", controllers.GetAllTasks)
+		admin.GET("/tasks/:id", controllers.GetTaskByID)
+		admin.POST("/tasks", controllers.CreateTask)
+		admin.PUT("/tasks/:id", controllers.UpdateTask)
+		admin.DELETE("/tasks/:id", controllers.DeleteTask)
 	}
 
 	return r
