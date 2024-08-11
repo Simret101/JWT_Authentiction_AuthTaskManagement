@@ -3,6 +3,7 @@ package data
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"task/config"
 	"task/models"
 	"time"
@@ -11,25 +12,31 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var users = []models.User{}
-
-type Claims struct {
-	Username string `json:"username"`
-	jwt.RegisteredClaims
-}
+var (
+	users      = []models.User{}
+	lastUserID = 0
+	userMu     sync.Mutex
+)
 
 
 func CreateUser(user *models.User) error {
+	userMu.Lock()
+	defer userMu.Unlock()
+
 	for _, u := range users {
 		if u.Username == user.Username {
 			return errors.New("username already exists")
 		}
 	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 	user.Password = string(hashedPassword)
+	lastUserID++
+	user.ID = lastUserID
+
 	users = append(users, *user)
 	fmt.Printf("User created: %v\n", user)
 	return nil
@@ -37,45 +44,70 @@ func CreateUser(user *models.User) error {
 
 
 func AuthenticateUser(username, password string) (string, error) {
+	userMu.Lock()
+	defer userMu.Unlock()
+
 	for _, user := range users {
 		if user.Username == username {
-			if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-				return "", errors.New("invalid credentials")
+			if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err == nil {
+				return generateToken(user)
 			}
-			return generateJWT(username)
+			break
 		}
 	}
-	return "", errors.New("invalid credentials")
+	return "", errors.New("invalid username or password")
 }
 
-// checks the validity of the JWT token
-func ValidateToken(tokenString string) (*Claims, error) {
-	claims := &Claims{}
+e
+func GetUserByUsername(username string) (*models.User, error) {
+	userMu.Lock()
+	defer userMu.Unlock()
+
+	for _, user := range users {
+		if user.Username == username {
+			return &user, nil
+		}
+	}
+	return nil, errors.New("user not found")
+}
+
+func generateToken(user models.User) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"userID": user.ID,
+		"role":   user.Role,
+		"exp":    time.Now().Add(config.TokenExpiration).Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte(config.SecretKey))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+
+func ValidateToken(tokenString string) (*models.Claims, error) {
+	claims := &models.Claims{}
+
+	
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(config.SecretKey), nil
 	})
+
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			return nil, errors.New("invalid token signature")
 		}
 		return nil, err
 	}
+
 	if !token.Valid {
 		return nil, errors.New("invalid token")
 	}
-	return claims, nil
-}
 
-
-func generateJWT(username string) (string, error) {
-	expirationTime := time.Now().Add(config.TokenExpiration)
-	claims := &Claims{
-		Username: username,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-		},
+	if claims.ExpiresAt < time.Now().Unix() {
+		return nil, errors.New("token has expired")
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(config.SecretKey))
+
+	return claims, nil
 }
 
