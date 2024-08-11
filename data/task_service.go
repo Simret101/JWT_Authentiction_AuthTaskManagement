@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"sync"
 	"task/models"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
-	tasks  = []models.Task{}
-	lastID = 0
-	mu     sync.Mutex
+	tasks = []models.Task{}
+	mu    sync.Mutex
 )
 
 
@@ -21,7 +22,20 @@ func GetAllTasks() []models.Task {
 }
 
 
-func GetTaskByID(id int) (*models.Task, error) {
+func GetTasksByUserID(userID int) []models.Task {
+	mu.Lock()
+	defer mu.Unlock()
+	var userTasks []models.Task
+	for _, task := range tasks {
+		if task.UserID == userID {
+			userTasks = append(userTasks, task)
+		}
+	}
+	return userTasks
+}
+
+
+func GetTaskByID(id primitive.ObjectID) (*models.Task, error) {
 	mu.Lock()
 	defer mu.Unlock()
 	for _, task := range tasks {
@@ -32,24 +46,23 @@ func GetTaskByID(id int) (*models.Task, error) {
 	return nil, errors.New("task not found")
 }
 
-// Creates a new task
+
 func CreateTask(task *models.Task) {
 	mu.Lock()
 	defer mu.Unlock()
-	lastID++
-	task.ID = lastID
+	task.ID = primitive.NewObjectID() // Generate a new ObjectID
 	tasks = append(tasks, *task)
 	fmt.Printf("Task created: %v\n", task)
 }
 
-// updates a task by ID
-func UpdateTask(id int, updatedTask *models.Task) error {
+// UpdateTask updates an existing task by its ObjectID.
+func UpdateTask(id primitive.ObjectID, updatedTask *models.Task) error {
 	mu.Lock()
 	defer mu.Unlock()
 	for i, task := range tasks {
 		if task.ID == id {
+			updatedTask.ID = id
 			tasks[i] = *updatedTask
-			tasks[i].ID = id
 			fmt.Printf("Task updated: %v\n", updatedTask)
 			return nil
 		}
@@ -58,13 +71,13 @@ func UpdateTask(id int, updatedTask *models.Task) error {
 }
 
 
-func DeleteTask(id int) error {
+func DeleteTask(id primitive.ObjectID) error {
 	mu.Lock()
 	defer mu.Unlock()
 	for i, task := range tasks {
 		if task.ID == id {
 			tasks = append(tasks[:i], tasks[i+1:]...)
-			fmt.Printf("Task deleted with ID: %d\n", id)
+			fmt.Printf("Task deleted with ID: %s\n", id.Hex())
 			return nil
 		}
 	}
