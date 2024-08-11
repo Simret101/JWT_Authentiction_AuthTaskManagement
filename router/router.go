@@ -7,14 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	
 	r.POST("/register", controllers.Register)
 	r.POST("/login", controllers.Login)
-
 
 	auth := r.Group("/")
 	auth.Use(middleware.AuthMiddleware())
@@ -26,7 +23,6 @@ func SetupRouter() *gin.Engine {
 		auth.DELETE("/tasks/:id", controllers.DeleteTask)
 	}
 
-	
 	admin := r.Group("/admin")
 	admin.Use(middleware.AuthMiddleware(), middleware.AdminMiddleware())
 	{
