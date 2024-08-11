@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -17,6 +16,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		claims, err := data.ValidateToken(tokenString)
 		if err != nil {
@@ -24,7 +24,9 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		c.Set("username", claims.Username)
+
+		c.Set("userID", claims.UserID)
+		c.Set("role", claims.Role)
 		c.Next()
 	}
 }
