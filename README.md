@@ -1,7 +1,9 @@
 
 # Task Manager API
 
-This is a Task Manager API built with Go, utilizing the Gin framework. The API allows users to register, log in, and manage tasks. It includes features such as JWT-based authentication, role-based access control (user and admin), and task ownership validation.
+Overview
+The Task Management API is a RESTful API that allows users and administrators to manage tasks with JWT-based authentication and authorization. This API supports operations for creating, reading, updating, and deleting tasks. It is designed for managing tasks with role-based access control where users and admins have different levels of access.
+
 
 ## Project Structure
 
@@ -58,16 +60,8 @@ task-manager/
     go run main.go
     ```
 
-    The application will start on `http://localhost:8080`.
+    The application will start on `http://localhost:9090`.
 
-## Configuration
-
-The configuration settings are defined in `config/config.go`. You can adjust the following parameters:
-
-- `SecretKey`: The secret key used for JWT token signing.
-- `TokenExpiration`: The expiration duration for the JWT tokens.
-- `DatabaseURI`: The URI for the MongoDB database (if used).
-- `UserDBName` & `TaskDBName`: The database names for users and tasks, respectively.
 
 ## API Endpoints
 
