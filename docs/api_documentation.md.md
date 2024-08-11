@@ -1,111 +1,256 @@
 
+# Task Management API Documentation
 
-**Task Management API with JWT Authentication**
+## Overview
 
-**Introduction**
+The Task Management API is designed for managing tasks with JWT-based authentication and authorization. The API supports operations for both users and admins, allowing task creation, retrieval, update, and deletion. Authentication is handled via JWT tokens, which are required for accessing protected endpoints.
 
-This document outlines the functionalities, API endpoints, usage instructions, and authentication process for a Task Management API built with Go and Gin framework. It utilizes JWT (JSON Web Token) for user authentication and authorization.
+## Base URL
 
+The base URL for the API is:
+- **Development Environment**: `http://localhost:9090`
 
-**Running the API Server**
+## Authentication
 
-1. Run `go run main.go` to start the server.
-2. The API will be accessible by default on port 8080 (http://localhost:8080/).
+All endpoints that require authentication need a JWT token in the `Authorization` header. The token should be in the format:
+```
+Authorization: Bearer <token>
+```
 
-**API Endpoints**
+Replace `<token>` with the actual JWT obtained during the login process.
 
-**User Management:**
+## Endpoints
 
-* **POST /register**
-    * Body: JSON object containing username and password.
-    * Response: 201 Created with the newly created user object (excluding password) upon successful registration.
-    * Example request:
-      ```json
-      {
-        "username": "testuser",
-        "password": "testpassword"
-      }
-      ```
-* **POST /login**
-    * Body: JSON object containing username and password for authentication.
-    * Response: 200 OK with a JSON object containing the JWT token on successful login.
-    * Example request:
-      ```json
-      {
-        "username": "testuser",
-        "password": "testpassword"
-      }
-      ```
-    * **Authorization:** None required for login.
+### User Endpoints
 
-**Task Management:**
+#### 1. User Registration
+- **Endpoint**: `POST /register`
+- **Description**: Registers a new user. Role should be `user`.
+- **Request Body**:
+  ```json
+  {
+    "username": "string",
+    "password": "string",
+    "role": "user"
+  }
+  ```
+- **Response**: Returns the created user object with a unique ID.
 
-* **GET /tasks**
-    * Retrieves a list of all tasks. Requires a valid JWT token in the Authorization header.
-    * Response: 200 OK with a JSON array containing task objects.
-    * Example request (with Authorization header):
-      ```
-      GET /tasks
-      Authorization: Bearer <your_jwt_token>
-      ```
-* **GET /tasks/:id**
-    * Retrieves a specific task by its ID. Requires a valid JWT token.
-    * Response: 200 OK with a JSON object representing the task or 404 Not Found if the ID is invalid.
-    * Example request:
-      ```
-      GET /tasks/1
-      Authorization: Bearer <your_jwt_token>
-      ```
-* **POST /tasks**
-    * Creates a new task. Requires a valid JWT token.
-    * Body: JSON object containing the task details.
-    * Response: 201 Created with the newly created task object.
-    * Example request:
-      ```
-      POST /tasks
-      Content-Type: application/json
-      Authorization: Bearer <your_jwt_token>
+#### 2. User Login
+- **Endpoint**: `POST /login`
+- **Description**: Authenticates a user and returns a JWT token.
+- **Request Body**:
+  ```json
+  {
+    "username": "string",
+    "password": "string"
+  }
+  ```
+- **Response**: Returns the JWT token.
 
-      {
-        "title": "Task title",
-        "description": "Task description"
-      }
-      ```
-* **PUT /tasks/:id**
-    * Updates a specific task by its ID. Requires a valid JWT token.
-    * Body: JSON object containing the updated task details.
-    * Response: 200 OK with the updated task object or 404 Not Found if the ID is invalid.
-    * Example request:
-      ```
-      PUT /tasks/1
-      Content-Type: application/json
-      Authorization: Bearer <your_jwt_token>
+#### 3. Create Task for User
+- **Endpoint**: `POST /tasks`
+- **Description**: Creates a new task for the authenticated user.
+- **Request Body**:
+  ```json
+  {
+    "title": "string",
+    "description": "string",
+    "duedate": "ISO8601 datetime",
+    "status": "TaskStatus"
+  }
+  ```
+- **Response**: Returns the created task with a unique ID.
 
-      {
-        "title": "Updated task title"
-      }
-      ```
-* **DELETE /tasks/:id**
-    * Deletes a specific task by its ID. Requires a valid JWT token.
-    * Response: 204 No Content on successful deletion or 404 Not Found if the ID is invalid.
-    * Example request:
-      ```
-      DELETE /tasks/1
-      Authorization: Bearer <your_jwt_token>
-      ```
+#### 4. Get All Tasks for User
+- **Endpoint**: `GET /tasks`
+- **Description**: Retrieves all tasks associated with the authenticated user.
+- **Response**: Returns a list of tasks.
 
-**Authentication**
+#### 5. Get Task by ID for User
+- **Endpoint**: `GET /tasks/{id}`
+- **Description**: Retrieves a specific task by its ID for the authenticated user.
+- **Response**: Returns the task details.
 
-The API uses JWTs for authentication and authorization. To access protected routes (like `GET /tasks`), you'll need to obtain a JWT token by logging in with a valid username and password.
+#### 6. Update Task for User
+- **Endpoint**: `PUT /tasks/{id}`
+- **Description**: Updates an existing task for the authenticated user.
+- **Request Body**:
+  ```json
+  {
+    "title": "string",
+    "description": "string",
+    "duedate": "ISO8601 datetime",
+    "status": "TaskStatus"
+  }
+  ```
+- **Response**: Returns the updated task.
 
-1. **Login:** Send a POST request to `/login` with the user's credentials. Upon successful login, the server will respond with a JWT token.
-2. **Retrieve Tasks:** Include the JWT token in the Authorization header of subsequent requests to access protected resources:
-   ```
-   Authorization: Bearer <your_jwt_token>
-   ```
+#### 7. Delete Task for User
+- **Endpoint**: `DELETE /tasks/{id}`
+- **Description**: Deletes a specific task by its ID for the authenticated user.
+- **Response**: Returns a confirmation of successful deletion.
+
+### Admin Endpoints
+
+#### 1. Register an Admin
+- **Endpoint**: `POST /register`
+- **Description**: Registers a new admin user.
+- **Request Body**:
+  ```json
+  {
+    "username": "string",
+    "password": "string",
+    "role": "admin"
+  }
+  ```
+- **Response**: Returns the created admin user object with a unique ID.
+
+#### 2. Admin Login
+- **Endpoint**: `POST /login`
+- **Description**: Authenticates an admin and returns a JWT token.
+- **Request Body**:
+  ```json
+  {
+    "username": "string",
+    "password": "string",
+    "role": "admin"
+  }
+  ```
+- **Response**: Returns the JWT token.
+
+#### 3. Create Task by Admin
+- **Endpoint**: `POST /tasks`
+- **Description**: Creates a new task for any user. Admins can specify `userID`.
+- **Request Body**:
+  ```json
+  {
+    "title": "string",
+    "description": "string",
+    "duedate": "ISO8601 datetime",
+    "status": "TaskStatus",
+    "userID": "integer"
+  }
+  ```
+- **Response**: Returns the created task with a unique ID.
+
+#### 4. Get All Tasks for Admin
+- **Endpoint**: `GET /tasks`
+- **Description**: Retrieves all tasks in the system, accessible to admin users.
+- **Response**: Returns a comprehensive list of all tasks.
+
+#### 5. Get Task by ID for Admin
+- **Endpoint**: `GET /tasks/{id}`
+- **Description**: Retrieves a specific task by its ID, accessible to admins.
+- **Response**: Returns the task details.
+
+#### 6. Update Task by ID for Admin
+- **Endpoint**: `PUT /tasks/{id}`
+- **Description**: Updates a specific task by its ID. Admins can reassign tasks to different users.
+- **Request Body**:
+  ```json
+  {
+    "title": "string",
+    "description": "string",
+    "duedate": "ISO8601 datetime",
+    "status": "TaskStatus",
+    "userID": "integer"
+  }
+  ```
+- **Response**: Returns the updated task.
+
+#### 7. Delete Task by ID for Admin
+- **Endpoint**: `DELETE /tasks/{id}`
+- **Description**: Deletes a specific task by its ID. Admins can delete any task in the system.
+- **Response**: Returns a confirmation of successful deletion.
+
+## TaskStatus Enum
+
+The `status` field can have one of the following values:
+- `complete`
+- `in_progress`
+- `started`
+
+## Error Handling
+
+The API may return the following HTTP status codes:
+- **400 Bad Request**: Invalid request payload or parameters.
+- **401 Unauthorized**: Invalid or missing authentication token.
+- **403 Forbidden**: Insufficient permissions to access or modify the resource.
+- **404 Not Found**: Resource (user or task) not found.
+- **500 Internal Server Error**: Unexpected server error.
+
+## Example Requests
+
+### User Registration
+```http
+POST /register
+Content-Type: application/json
+
+{
+  "username": "john_doe",
+  "password": "securepassword",
+  "role": "user"
+}
+```
+
+### User Login
+```http
+POST /login
+Content-Type: application/json
+
+{
+  "username": "john_doe",
+  "password": "securepassword"
+}
+```
+
+### Create Task for User
+```http
+POST /tasks
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "New Task",
+  "description": "Task description",
+  "duedate": "2024-08-15T14:30:00Z",
+  "status": "in_progress"
+}
+```
+
+### Update Task for User
+```http
+PUT /tasks/{id}
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Updated Task Title",
+  "description": "Updated description",
+  "duedate": "2024-08-15T14:30:00Z",
+  "status": "complete"
+}
+```
+
+### Get All Tasks for User
+```http
+GET /tasks
+Authorization: Bearer <token>
+```
+
+### Delete Task for User
+```http
+DELETE /tasks/{id}
+Authorization: Bearer <token>
+```
+
+## Conclusion
+
+This API provides a robust set of endpoints for managing tasks with clear role-based access control. Ensure to include JWT tokens for authenticated endpoints and follow the request and response formats as described.
 
 **Error Handling**
 
-The API will return standard HTTP status codes to indicate success or failure of requests. Refer to the specific endpoint descriptions for expected response codes
+The API will return standard HTTP status codes to indicate success or failure of requests. 
 
-POSTMAN DOCUMENTATION: https://documenter.getpostman.com/view/37289771/2sA3rzKsPp
+API DOCUMENTATION: [https://documenter.getpostman.com/view/37289771/2sA3rzKsPp]
